@@ -1,4 +1,4 @@
-package com.example.examplemod.platform;
+package tfar.fancymessages.platform;
 
 import com.example.examplemod.platform.services.IPlatformHelper;
 import net.neoforged.fml.ModList;

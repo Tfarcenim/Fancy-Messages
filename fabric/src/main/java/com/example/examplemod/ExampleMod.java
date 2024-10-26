@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import net.fabricmc.api.ModInitializer;
+import tfar.fancymessages.FancyMessages;
 
 public class ExampleMod implements ModInitializer {
     
@@ -12,7 +13,6 @@ public class ExampleMod implements ModInitializer {
         // project.
 
         // Use Fabric to bootstrap the Common mod.
-        Constants.LOG.info("Hello Fabric world!");
-        CommonClass.init();
+        FancyMessages.init();
     }
 }

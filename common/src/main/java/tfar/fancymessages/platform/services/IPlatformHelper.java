@@ -1,4 +1,4 @@
-package com.example.examplemod.platform.services;
+package tfar.fancymessages.platform.services;
 
 public interface IPlatformHelper {
 
