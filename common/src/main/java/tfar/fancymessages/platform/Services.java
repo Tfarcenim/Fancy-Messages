@@ -1,7 +1,7 @@
 package tfar.fancymessages.platform;
 
-import com.example.examplemod.platform.services.IPlatformHelper;
 import tfar.fancymessages.FancyMessages;
+import tfar.fancymessages.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
 
