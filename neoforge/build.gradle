@@ -56,6 +56,11 @@ dependencies {
     }
 
     api("dev.ftb.mods:ftb-library-neoforge:${ftb_library_version}") { transitive false }
+    //implementation "dev.ftb.mods:ftb-quests-neoforge:${ftb_quests_version}"
+    implementation "dev.ftb.mods:ftb-quests-neoforge:2101.1.0-SNAPSHOT"
+
+    implementation "dev.ftb.mods:ftb-teams-neoforge:2101.1.1-SNAPSHOT"
+
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

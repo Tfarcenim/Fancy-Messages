@@ -17,8 +17,7 @@ dependencies {
     compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
     annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
 
-    api("dev.ftb.mods:ftb-quests-neoforge:${ftb_quests_version}") {transitive false}
-
+    //compileOnly "dev.ftb.mods:ftb-quests-neoforge:${ftb_quests_version}"
     implementation "dev.ftb.mods:ftb-library-neoforge:2101.1.4-SNAPSHOT"
     implementation "dev.ftb.mods:ftb-teams-neoforge:2101.1.1-SNAPSHOT"
 
