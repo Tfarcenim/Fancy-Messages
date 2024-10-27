@@ -54,6 +54,8 @@ dependencies {
         implementation "me.shedaniel.cloth:cloth-config-neoforge:$cloth_config_version"
         implementation "dev.architectury:architectury-neoforge:$architectury_version"
     }
+
+    api("dev.ftb.mods:ftb-library-neoforge:${ftb_library_version}") { transitive false }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

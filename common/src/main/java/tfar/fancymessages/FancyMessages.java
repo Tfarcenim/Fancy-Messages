@@ -1,5 +1,6 @@
 package tfar.fancymessages;
 
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,5 +20,9 @@ public class FancyMessages {
     // code that gets invoked by the entry point of the loader specific projects.
     public static void init() {
 
+    }
+
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID,path);
     }
 }

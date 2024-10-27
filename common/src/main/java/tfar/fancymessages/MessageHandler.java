@@ -1,6 +1,7 @@
 package tfar.fancymessages;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
@@ -8,16 +9,16 @@ import com.google.gson.stream.JsonWriter;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.GsonHelper;
 import org.apache.commons.io.IOUtils;
-import tfar.fancymessages.platform.Services;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MessageHandler {
@@ -28,8 +29,8 @@ public class MessageHandler {
     public static final String ADV = "advancements";
 
     private static Map<ResourceLocation, MessageDisplay> advancementMessages = new HashMap<>();
-    private static Map<ResourceLocation, Component> biomeMessages = new HashMap<>();
-    private static Map<ResourceLocation, Component> questMessages = new HashMap<>();
+    private static Map<ResourceLocation, MessageDisplay> biomeMessages = new HashMap<>();
+    private static Map<ResourceLocation, MessageDisplay> questMessages = new HashMap<>();
 
     public static void createBlankFile() {
         createFile(createBlankJson());
@@ -78,33 +79,59 @@ public class MessageHandler {
     }
 
     public static void saveToFile(RegistryAccess access) {
-        MinecraftServer server = Services.PLATFORM.getServer();
         JsonObject object = new JsonObject();
+        saveMessageGroup(object,ADV,access,advancementMessages);
+        saveMessageGroup(object,"biomes",access,biomeMessages);
+        saveMessageGroup(object,"quests",access,questMessages);
+        createFile(object);
+    }
+
+    public static void saveMessageGroup(JsonObject object, String category, RegistryAccess access,Map<ResourceLocation,MessageDisplay> map) {
         JsonObject advObject = new JsonObject();
-        for (Map.Entry<ResourceLocation, MessageDisplay> entry : advancementMessages.entrySet()) {
+        for (Map.Entry<ResourceLocation, MessageDisplay> entry : map.entrySet()) {
             JsonObject o = new JsonObject();
             o.addProperty("subtitle",Component.Serializer.toJson(entry.getValue().subtitle(),access));
-            o.addProperty("message",Component.Serializer.toJson(entry.getValue().message(),access));
+
+            JsonArray array = new JsonArray();
+
+            for (Component component : entry.getValue().messages()) {
+                array.add(Component.Serializer.toJson(component,access));
+            }
+
+            o.add("messages",array);
 
             advObject.add(entry.getKey().toString(),o);
         }
-        object.add(ADV,advObject);
-        createFile(object);
+        object.add(category,advObject);
     }
 
     public static void load(JsonObject pObject, RegistryAccess registryAccess) {
         advancementMessages.clear();
         biomeMessages.clear();
         questMessages.clear();
-        JsonObject advancements = GsonHelper.getAsJsonObject(pObject,ADV);
+
+        parseMessageGroup(pObject,ADV,registryAccess,advancementMessages);
+        parseMessageGroup(pObject,"biomes",registryAccess,biomeMessages);
+        parseMessageGroup(pObject,"quests",registryAccess,questMessages);
+
+    }
+
+    static void parseMessageGroup(JsonObject object,String category,RegistryAccess access,Map<ResourceLocation,MessageDisplay> map) {
+        JsonObject advancements = GsonHelper.getAsJsonObject(object,category);
         for (Map.Entry<String,JsonElement> entry: advancements.asMap().entrySet()) {
             try {
                 ResourceLocation id = ResourceLocation.parse(entry.getKey());
                 JsonObject o = entry.getValue().getAsJsonObject();
-                Component title = Component.Serializer.fromJson(o.get("subtitle"),registryAccess);
-                Component message = Component.Serializer.fromJson(o.get("message"),registryAccess);
+                Component title = Component.Serializer.fromJson(o.get("subtitle"),access);
 
-                advancementMessages.put(id,new MessageDisplay(title,message));
+                JsonArray messages = o.get("messages").getAsJsonArray();
+                List<Component> lines = new ArrayList<>();
+                for (JsonElement element : messages) {
+                    Component message = Component.Serializer.fromJson(element,access);
+                    lines.add(message);
+                }
+
+                map.put(id,new MessageDisplay(title,lines));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -113,5 +140,13 @@ public class MessageHandler {
 
     public static Map<ResourceLocation, MessageDisplay> getAdvancementMessages() {
         return advancementMessages;
+    }
+
+    public static Map<ResourceLocation, MessageDisplay> getBiomeMessages() {
+        return biomeMessages;
+    }
+
+    public static Map<ResourceLocation, MessageDisplay> getQuestMessages() {
+        return questMessages;
     }
 }
