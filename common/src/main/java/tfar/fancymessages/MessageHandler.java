@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -26,7 +27,7 @@ public class MessageHandler {
 
     public static final String ADV = "advancements";
 
-    private static Map<ResourceLocation, Component> advancementMessages = new HashMap<>();
+    private static Map<ResourceLocation, MessageDisplay> advancementMessages = new HashMap<>();
     private static Map<ResourceLocation, Component> biomeMessages = new HashMap<>();
     private static Map<ResourceLocation, Component> questMessages = new HashMap<>();
 
@@ -76,35 +77,41 @@ public class MessageHandler {
         return null;
     }
 
-    public static void saveToFile() {
+    public static void saveToFile(RegistryAccess access) {
         MinecraftServer server = Services.PLATFORM.getServer();
         JsonObject object = new JsonObject();
         JsonObject advObject = new JsonObject();
-        for (Map.Entry<ResourceLocation,Component> entry : advancementMessages.entrySet()) {
-            advObject.addProperty(entry.getKey().toString(),Component.Serializer.toJson(entry.getValue(),server.registryAccess()));
+        for (Map.Entry<ResourceLocation, MessageDisplay> entry : advancementMessages.entrySet()) {
+            JsonObject o = new JsonObject();
+            o.addProperty("subtitle",Component.Serializer.toJson(entry.getValue().subtitle(),access));
+            o.addProperty("message",Component.Serializer.toJson(entry.getValue().message(),access));
+
+            advObject.add(entry.getKey().toString(),o);
         }
         object.add(ADV,advObject);
         createFile(object);
     }
 
-    public static void load(JsonObject pObject) {
+    public static void load(JsonObject pObject, RegistryAccess registryAccess) {
         advancementMessages.clear();
         biomeMessages.clear();
         questMessages.clear();
-        MinecraftServer server = Services.PLATFORM.getServer();
         JsonObject advancements = GsonHelper.getAsJsonObject(pObject,ADV);
         for (Map.Entry<String,JsonElement> entry: advancements.asMap().entrySet()) {
             try {
                 ResourceLocation id = ResourceLocation.parse(entry.getKey());
-                Component title = Component.Serializer.fromJson(entry.getValue(),server.registryAccess());
-                advancementMessages.put(id,title);
+                JsonObject o = entry.getValue().getAsJsonObject();
+                Component title = Component.Serializer.fromJson(o.get("subtitle"),registryAccess);
+                Component message = Component.Serializer.fromJson(o.get("message"),registryAccess);
+
+                advancementMessages.put(id,new MessageDisplay(title,message));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public static Map<ResourceLocation, Component> getAdvancementMessages() {
+    public static Map<ResourceLocation, MessageDisplay> getAdvancementMessages() {
         return advancementMessages;
     }
 }

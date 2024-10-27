@@ -4,6 +4,8 @@ package tfar.fancymessages;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -36,17 +38,25 @@ public class FancyMessagesNeoForge {
 
 
     void reload(AddReloadListenerEvent event) {
-        event.addListener(new FancyMessagesReloadListener());
+        event.addListener(new FancyMessagesReloadListener(event.getRegistryAccess()));
     }
 
     void onAdvancement(AdvancementEvent.AdvancementEarnEvent event) {
         ResourceLocation resourceLocation = event.getAdvancement().id();
-        Component message = MessageHandler.getAdvancementMessages().get(resourceLocation);
+        MessageDisplay message = MessageHandler.getAdvancementMessages().get(resourceLocation);
         ServerPlayer player = (ServerPlayer) event.getEntity();
         if (message != null) {
+            MutableComponent testMessage = Component.empty();
+            testMessage.append(message.message()).append("\n").append("line 2").append("line 3");
             try {
-                ClientboundSetSubtitleTextPacket packet = new ClientboundSetSubtitleTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(), message, player, 0));
+                ClientboundSetTitleTextPacket tpacket = new ClientboundSetTitleTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(), Component.empty(), player, 0));
+                ClientboundSetSubtitleTextPacket packet = new ClientboundSetSubtitleTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(), message.subtitle(), player, 0));
+
+                ClientboundSetActionBarTextPacket packetAction = new ClientboundSetActionBarTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(),testMessage, player, 0));
+
+                player.connection.send(tpacket);
                 player.connection.send(packet);
+                player.connection.send(packetAction);
             } catch (CommandSyntaxException e) {
                 e.printStackTrace();
             }

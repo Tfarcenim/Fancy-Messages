@@ -3,7 +3,6 @@ package tfar.fancymessages;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -32,8 +31,10 @@ public class ModCommands {
                         .then(Commands.literal("advancement")
                                 .then(Commands.argument("advancement", ResourceLocationArgument.id())
                                         .suggests(AdvancementCommands.SUGGEST_ADVANCEMENTS)
-                                        .then(Commands.argument("message", ComponentArgument.textComponent(context))
-                                                .executes(ModCommands::addAchievement)
+                                        .then(Commands.argument("subtitle", ComponentArgument.textComponent(context))
+                                                .then(Commands.argument("message", ComponentArgument.textComponent(context))
+                                                        .executes(ModCommands::addAchievement)
+                                                )
                                         )
                                 )
                         )
@@ -58,10 +59,11 @@ public class ModCommands {
 
     static int addAchievement(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         AdvancementHolder advancement = ResourceLocationArgument.getAdvancement(context, "advancement");
+        Component componentSubtitle = ComponentArgument.getComponent(context,"subtitle");
         Component component = ComponentArgument.getComponent(context,"message");
-        MessageHandler.getAdvancementMessages().put(advancement.id(),component);
+        MessageHandler.getAdvancementMessages().put(advancement.id(),new MessageDisplay(componentSubtitle,component));
 
-        MessageHandler.saveToFile();
+        MessageHandler.saveToFile(context.getSource().registryAccess());
         return 1;
     }
 
