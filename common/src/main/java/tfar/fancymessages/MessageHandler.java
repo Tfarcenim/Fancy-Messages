@@ -30,7 +30,7 @@ public class MessageHandler {
 
     private static Map<ResourceLocation, MessageDisplay> advancementMessages = new HashMap<>();
     private static Map<ResourceLocation, MessageDisplay> biomeMessages = new HashMap<>();
-    private static Map<ResourceLocation, MessageDisplay> questMessages = new HashMap<>();
+    private static Map<String, MessageDisplay> questMessages = new HashMap<>();
 
     public static void createBlankFile() {
         createFile(createBlankJson());
@@ -82,7 +82,7 @@ public class MessageHandler {
         JsonObject object = new JsonObject();
         saveMessageGroup(object,ADV,access,advancementMessages);
         saveMessageGroup(object,"biomes",access,biomeMessages);
-        saveMessageGroup(object,"quests",access,questMessages);
+        saveMessageGroupGeneric(object,"quests",access,questMessages);
         createFile(object);
     }
 
@@ -105,6 +105,25 @@ public class MessageHandler {
         object.add(category,advObject);
     }
 
+    public static void saveMessageGroupGeneric(JsonObject object, String category, RegistryAccess access,Map<String,MessageDisplay> map) {
+        JsonObject advObject = new JsonObject();
+        for (Map.Entry<String, MessageDisplay> entry : map.entrySet()) {
+            JsonObject o = new JsonObject();
+            o.addProperty("subtitle",Component.Serializer.toJson(entry.getValue().subtitle(),access));
+
+            JsonArray array = new JsonArray();
+
+            for (Component component : entry.getValue().messages()) {
+                array.add(Component.Serializer.toJson(component,access));
+            }
+
+            o.add("messages",array);
+
+            advObject.add(entry.getKey(),o);
+        }
+        object.add(category,advObject);
+    }
+
     public static void load(JsonObject pObject, RegistryAccess registryAccess) {
         advancementMessages.clear();
         biomeMessages.clear();
@@ -112,7 +131,7 @@ public class MessageHandler {
 
         parseMessageGroup(pObject,ADV,registryAccess,advancementMessages);
         parseMessageGroup(pObject,"biomes",registryAccess,biomeMessages);
-        parseMessageGroup(pObject,"quests",registryAccess,questMessages);
+        parseMessageGroupGeneric(pObject,"quests",registryAccess,questMessages);
 
     }
 
@@ -138,6 +157,28 @@ public class MessageHandler {
         }
     }
 
+    static void parseMessageGroupGeneric(JsonObject object,String category,RegistryAccess access,Map<String,MessageDisplay> map) {
+        JsonObject advancements = GsonHelper.getAsJsonObject(object,category);
+        for (Map.Entry<String,JsonElement> entry: advancements.asMap().entrySet()) {
+            try {
+                String id = entry.getKey();
+                JsonObject o = entry.getValue().getAsJsonObject();
+                Component title = Component.Serializer.fromJson(o.get("subtitle"),access);
+
+                JsonArray messages = o.get("messages").getAsJsonArray();
+                List<Component> lines = new ArrayList<>();
+                for (JsonElement element : messages) {
+                    Component message = Component.Serializer.fromJson(element,access);
+                    lines.add(message);
+                }
+
+                map.put(id,new MessageDisplay(title,lines));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static Map<ResourceLocation, MessageDisplay> getAdvancementMessages() {
         return advancementMessages;
     }
@@ -146,7 +187,7 @@ public class MessageHandler {
         return biomeMessages;
     }
 
-    public static Map<ResourceLocation, MessageDisplay> getQuestMessages() {
+    public static Map<String, MessageDisplay> getQuestMessages() {
         return questMessages;
     }
 }

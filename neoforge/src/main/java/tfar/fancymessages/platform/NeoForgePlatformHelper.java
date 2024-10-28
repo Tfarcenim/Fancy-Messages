@@ -1,5 +1,8 @@
 package tfar.fancymessages.platform;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -9,6 +12,7 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import tfar.fancymessages.FTBQuestsCompatNeoForge;
 import tfar.fancymessages.PacketHandlerNeoForge;
 import tfar.fancymessages.network.C2SModPacket;
 import tfar.fancymessages.network.S2CModPacket;
@@ -61,4 +65,13 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
         PacketHandlerNeoForge.sendToServer(msg);
     }
 
+    @Override
+    public void setupFTBIntegration() {
+        FTBQuestsCompatNeoForge.setup();
+    }
+
+    @Override
+    public void addOptionalCommands(LiteralArgumentBuilder<CommandSourceStack> builder, CommandBuildContext context) {
+        FTBQuestsCompatNeoForge.addCommand(builder,context);
+    }
 }

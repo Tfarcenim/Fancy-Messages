@@ -81,7 +81,7 @@ public class FancyMessagesNeoForge {
         }
     }
 
-    void sendMessage(String category,ResourceLocation location,ServerPlayer player) {
+    static void sendMessage(String category,ResourceLocation location,ServerPlayer player) {
 
         MessageDisplay display = null;
         switch (category) {
@@ -93,6 +93,31 @@ public class FancyMessagesNeoForge {
             }
             case "quests"-> {
 
+            }
+        }
+
+
+        if (display != null) {
+            try {
+                ClientboundSetTitleTextPacket tpacket = new ClientboundSetTitleTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(), Component.empty(), player, 0));
+                ClientboundSetSubtitleTextPacket packet = new ClientboundSetSubtitleTextPacket(ComponentUtils.updateForEntity(player.getServer().createCommandSourceStack(),display.subtitle(), player, 0));
+
+                S2CMultilinePacket.send(display.messages(),player);
+
+                player.connection.send(tpacket);
+                player.connection.send(packet);
+            } catch (CommandSyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static void sendMessageGeneric(String category, String location, ServerPlayer player) {
+
+        MessageDisplay display = null;
+        switch (category) {
+            case "quests"-> {
+                display = MessageHandler.getQuestMessages().get(location);
             }
         }
 

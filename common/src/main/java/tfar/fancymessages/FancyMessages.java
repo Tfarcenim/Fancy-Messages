@@ -3,6 +3,7 @@ package tfar.fancymessages;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tfar.fancymessages.platform.Services;
 
 // This class is part of the common project meaning it is shared between all supported loaders. Code written here can only
 // import and access the vanilla codebase, libraries used by vanilla, and optionally third party libraries that provide
@@ -15,11 +16,15 @@ public class FancyMessages {
     public static final String MOD_NAME = "Fancy-Messages";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
+    public static final boolean FTBQUESTS = Services.PLATFORM.isModLoaded("ftbquests");
+
     // The loader specific projects are able to import and use any code from the common project. This allows you to
     // write the majority of your code here and load it from your loader specific projects. This example has some
     // code that gets invoked by the entry point of the loader specific projects.
     public static void init() {
-
+        if (FTBQUESTS) {
+            Services.PLATFORM.setupFTBIntegration();
+        }
     }
 
     public static ResourceLocation id(String path) {

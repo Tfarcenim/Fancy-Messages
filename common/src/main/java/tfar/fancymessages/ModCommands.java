@@ -16,6 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.commands.AdvancementCommands;
 import net.minecraft.world.level.biome.Biome;
+import tfar.fancymessages.platform.Services;
 
 import java.util.List;
 
@@ -31,20 +32,22 @@ public class ModCommands {
     ///prettymsg create quest (quest name) (custom messages)
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context) {
-        dispatcher.register(Commands.literal("prettymsg")
-                .then(Commands.literal("create")
+
+
+        LiteralArgumentBuilder<CommandSourceStack> create =
+                Commands.literal("create")
                         .then(advancementNode(context))
-                        .then(biomeNode(context))
-                        .then(Commands.literal("quest")
-                                .then(Commands.argument("quest", ResourceLocationArgument.id())
-                                        .then(Commands.argument("messages", ComponentArgument.textComponent(context))
-                                                .suggests(AdvancementCommands.SUGGEST_ADVANCEMENTS)
-                                                .executes(ModCommands::addQuest)
-                                        )
-                                )
-                        )
-                )
-        );
+                        .then(biomeNode(context));
+
+        if (FancyMessages.FTBQUESTS) {
+            Services.PLATFORM.addOptionalCommands(create, context);
+        }
+
+        dispatcher.register(Commands.literal("prettymsg")
+                        .requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_ADMINS))
+                .then(create));
+
+
     }
 
     static LiteralArgumentBuilder<CommandSourceStack> advancementNode(CommandBuildContext context) {
@@ -82,6 +85,23 @@ public class ModCommands {
                 );
     }
 
+    static LiteralArgumentBuilder<CommandSourceStack> questNode(CommandBuildContext context) {
+        return Commands.literal("biome")
+                .then(Commands.argument("biome", ResourceArgument.resource(context, Registries.BIOME))
+                        .then(Commands.argument("subtitle", ComponentArgument.textComponent(context))
+                                .then(Commands.argument("message1", ComponentArgument.textComponent(context))
+                                        .executes(context1 -> addBiome(context1, ComponentArgument.getComponent(context1, "message1")))
+                                        .then(Commands.argument("message2", ComponentArgument.textComponent(context))
+                                                .executes(context1 -> addBiome(context1, ComponentArgument.getComponent(context1, "message1"), ComponentArgument.getComponent(context1, "message2")))
+                                                .then(Commands.argument("message3", ComponentArgument.textComponent(context))
+                                                        .executes(context1 -> addBiome(context1, ComponentArgument.getComponent(context1, "message1"), ComponentArgument.getComponent(context1, "message2"), ComponentArgument.getComponent(context1, "message3")))
+                                                )
+                                        )
+                                )
+                        )
+                );
+    }
+
     static int addAchievement(CommandContext<CommandSourceStack> context, Component... messages) throws CommandSyntaxException {
         AdvancementHolder advancement = ResourceLocationArgument.getAdvancement(context, "advancement");
         Component componentSubtitle = ComponentArgument.getComponent(context, "subtitle");
@@ -97,16 +117,6 @@ public class ModCommands {
         Component componentSubtitle = ComponentArgument.getComponent(context, "subtitle");
 
         MessageHandler.getBiomeMessages().put(biome.key().location(), new MessageDisplay(componentSubtitle, List.of(messages)));
-
-        MessageHandler.saveToFile(context.getSource().registryAccess());
-        return 1;
-    }
-
-    static int addQuest(CommandContext<CommandSourceStack> context, Component... messages) {
-        //     AdvancementHolder advancement = ResourceLocationArgument.getAdvancement(context, "advancement");
-        Component componentSubtitle = ComponentArgument.getComponent(context, "subtitle");
-
-        // MessageHandler.getAdvancementMessages().put(advancement.id(),new MessageDisplay(componentSubtitle, List.of(messages)));
 
         MessageHandler.saveToFile(context.getSource().registryAccess());
         return 1;

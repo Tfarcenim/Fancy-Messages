@@ -1,5 +1,8 @@
 package tfar.fancymessages.platform.services;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -48,4 +51,7 @@ public interface IPlatformHelper {
 
     void sendToClient(S2CModPacket<?> msg, ServerPlayer player);
     void sendToServer(C2SModPacket<?> msg);
+
+    void setupFTBIntegration();
+    void addOptionalCommands(LiteralArgumentBuilder<CommandSourceStack> builder, CommandBuildContext context);
 }
